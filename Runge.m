@@ -108,9 +108,6 @@ grid on; legend('original','order=5','order=10','order=20');
 xlabel('x');ylabel('y');
 title(['$x=ln(t), t \in [\mathrm{e}^{-1}, \mathrm{e}]$'],'interpreter','latex','FontSize',13);
 axis([-1,1,-0.2,1.2]);
-disp('x=ln(t), t∈[e-1, e]');
-disp(['5阶： ', polyFun1]);disp(['10阶： ', polyFun2]);disp(['20阶： ', polyFun3]);
-
 
 % 5.cosine_distribution
 f5 = @(t)-cos(t);           %f = -cos(t);t∈[0,pi];
