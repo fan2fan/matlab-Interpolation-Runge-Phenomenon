@@ -1,26 +1,16 @@
-%% lec7 ±à³ÌÊµÏÖÅ£¶ÙÄÚ²å¹«Ê½£¬²¢¶ÔÈçÏÂ³ÌÐò½øÐÐn½×¶àÏîÊ½ÄâºÏ
-%   f(x) = 1/(1+25x^2), x¡Ê[-1,1]
-% 1. µ±xiÔÚ[-1,1]ÖÐ¾ùÔÈÈ¡ÖµÊ±£¬Ëæ×ÅnµÄÔö¼Ó£¬N(x)ÊÇ·ñ¸ü¼Ó½Ó½üf(x) -> linspace(-1,1,n)
-% 2. Èç¹ûxi²»ÊÇ¾ùÔÈ·Ö²¼£¬Ëæ×ÅnµÄÔö¼Ó£¬N(x)¶Ôf(x)µÄÊÕÁ²ÐÔÊÇ·ñ·¢Éú¸Ä±ä-> 
-%   ¹Û²ì³õµÈº¯ÊýÐÎÊ½µÄ·Ö²¼¶ÔÊÕÁ²ÐÔµÄÓ°Ïì£º
-%   Ê¹ÓÃº¯Êý£ºf = @(t)(t.^2-1),t¡Ê[0,1]; f = sqrt(t)-1,t¡Ê[0,4];
-%            f = ln(t),t¡Ê[e^-1,e];
-%            f = exp(t)-2,t¡Ê[0,log(3)];
-%            f = -cos(t),t¡Ê[0,pi];f = sin(t);t¡Ê[-pi/2,pi/2];
-% 3. ÄÜ·ñÕÒµ½Ò»ÖÖxi·Ö²¼£¬Ê¹Ëæ×ÅnµÄÔö¼Ó£¬N(x)ÄÜÊÕÁ²µ½f(x)?
+%% Newton Interpolation and Runge Phenomenon with high order interpolation
+%  the original function is f(x) = 1/(1+25x^2), xâˆˆ[-1,1]
 
 close all;clear all;clc;
 
-%% ÌâÄ¿1£¬x¾ùÔÈÈ¡ÖµÊ±²»Í¬½×Êý²åÖµ
-% x¾ùÔÈÈ¡ÖµÊµ¼ÊÉÏ¶ÔÓ¦µÄÊÇÒ»´Îº¯Êýy=ax+b;
-% n¸öÊý¶ÔÓ¦n-1½×
-% ¶¨ÒåÔ­º¯Êý£º
+% 1. when x obeys uniform distribution
+% original functionï¼š
 f = @(x)1./(1+25*x.^2);
 
-xi = linspace(-1,1,100);    %²åÖµxµã
-x1 = linspace(-1,1,6);      %5½×
-x2 = linspace(-1,1,11);     %10½×
-x3 = linspace(-1,1,21);     %20½×
+xi = linspace(-1,1,100);    % original interpolation points
+x1 = linspace(-1,1,6);      % order = 5
+x2 = linspace(-1,1,11);     % order = 10
+x3 = linspace(-1,1,21);     % order = 20
 
 [polyFun1,N1] = NewtInt(x1,f(x1),xi);
 [polyFun2,N2] = NewtInt(x2,f(x2),xi);
@@ -29,27 +19,26 @@ x3 = linspace(-1,1,21);     %20½×
 figure(1)
 hold on;
 plot(xi,f(xi),'LineWidth',1.5); plot(xi,N1,'LineWidth',1.5); plot(xi,N2,'LineWidth',1.5); plot(xi,N3,'LineWidth',1.5);
-grid on; legend('Ô­º¯Êý','5½×²åÖµ','10½×²åÖµ','20½×²åÖµ');
-xlabel('x');ylabel('y');title('xÈ¡¾ùÖµÊ±5,10,20½×Å£¶Ù²åÖµ');
+grid on; legend('original','order=5','order=10','order=20');
+xlabel('x');ylabel('y');title('x obeys uniform distribution ');
 axis([-1,1,-0.2,1.2]);
-disp('xÈ¡¾ùÖµÊ±¶ÔÓ¦µÄ²åÖµ¶àÏîÊ½');
-disp(['5½×£º ', polyFun1]);disp(['10½×£º ', polyFun2]);disp(['20½×£º ', polyFun3]);
-
-%% ÌâÄ¿2£¬x·Ç¾ùÔÈ·Ö²¼Ê±²»Í¬½×Êý²åÖµ
-%   ÒªÊ¹x·Ç¾ùÔÈ·Ö²¼£¬¿ÉÒÔ¶ÔÊýÑ§µÄ³õµÈº¯Êý½øÐÐ³¢ÊÔ        
-%   ¶ÔÓÚÃÝº¯Êý£º  f = @(t)(t.^2-1),t¡Ê[0,sqrt(2)]; f = sqrt(t)-1,t¡Ê[0,4];
-%   ¶ÔÓÚÖ¸Êýº¯Êý£ºf = exp(t)-2,t¡Ê[0,log(3)];
-%   ¶ÔÓÚ¶ÔÊýº¯Êý£ºf = log(t),t¡Ê[exp(1).^-1,exp(1)];
-%   ¶ÔÓÚÈý½Çº¯Êý£ºf = -cos(t),t¡Ê[0,pi]; f = sin(t),t¡Ê[-pi/2,pi/2]
 
 
-% 1.¶ÔÓÚÃÝº¯Êý·Ö²¼£º£¨ÓÐÁ½ÖÖÐÎÊ½£©
-% 1.1¶ÔÓÚ¶þ´Îº¯Êý
-f1 = @(t)(t.^2-1);           %x = t^2 - 1;t¡Ê[0,sqrt(2)];
+%  Then we want to see whether different distributions of x will lead to different results
+%  Simplyï¼Œwe can use  the elementary functions in math  as below  
+%  quadratic functionï¼š   f = @(t)(t.^2-1),tâˆˆ[0,sqrt(2)]; 
+%  power function:        f = sqrt(t)-1,tâˆˆ[0,4];
+%  exponential functionï¼š f = exp(t)-2,tâˆˆ[0,log(3)];
+%  logarithmic functionï¼š f = log(t),tâˆˆ[exp(1).^-1,exp(1)];
+%  consine functionï¼š     f = -cos(t),tâˆˆ[0,pi]; 
+%  sine function:         f = sin(t),tâˆˆ[-pi/2,pi/2]
+
+% 1.quadratic_distribution
+f1 = @(t)(t.^2-1);
 t = linspace(0,sqrt(2),100); xi = f1(t);
-x1 = f1(linspace(0,sqrt(2),6));      %5½×
-x2 = f1(linspace(0,sqrt(2),11));     %10½×
-x3 = f1(linspace(0,sqrt(2),21));     %20½×
+x1 = f1(linspace(0,sqrt(2),6));      % order = 5
+x2 = f1(linspace(0,sqrt(2),11));     % order = 10
+x3 = f1(linspace(0,sqrt(2),21));     % order = 20
 
 [polyFun1,N1] = NewtInt(x1,f(x1),xi);
 [polyFun2,N2] = NewtInt(x2,f(x2),xi);
@@ -58,19 +47,17 @@ x3 = f1(linspace(0,sqrt(2),21));     %20½×
 figure(2)
 hold on;
 plot(xi,f(xi),'LineWidth',1.5); plot(xi,N1,'LineWidth',1.5); plot(xi,N2,'LineWidth',1.5); plot(xi,N3,'LineWidth',1.5);
-grid on; legend('Ô­º¯Êý','5½×²åÖµ','10½×²åÖµ','20½×²åÖµ');
+grid on; legend('original','order=5','order=10','order=20');
 xlabel('x');ylabel('y');
 title(['$x=t^2-1, t \in [0, \sqrt{2}]$'],'interpreter','latex','FontSize',13);
 axis([-1,1,-0.2,1.2]);
-disp('x=t^2-1, t¡Ê[0, sqrt(2)]');
-disp(['5½×£º ', polyFun1]);disp(['10½×£º ', polyFun2]);disp(['20½×£º ', polyFun3]);
 
-% 1.2¶ÔÓÚxµÄ¿ª·½£º
-f2 = @(t)(sqrt(t)-1);           %f = sqrt(t)-1;t¡Ê[0,4];
+% 2.power_distribution
+f2 = @(t)(sqrt(t)-1);
 t = linspace(0,4,100); xi = f2(t);
-x1 = f2(linspace(0,4,6));      %5½×
-x2 = f2(linspace(0,4,11));     %10½×
-x3 = f2(linspace(0,4,21));     %20½×
+x1 = f2(linspace(0,4,6));      % order = 5
+x2 = f2(linspace(0,4,11));     % order = 10
+x3 = f2(linspace(0,4,21));     % order = 20
 
 [polyFun1,N1] = NewtInt(x1,f(x1),xi);
 [polyFun2,N2] = NewtInt(x2,f(x2),xi);
@@ -79,19 +66,17 @@ x3 = f2(linspace(0,4,21));     %20½×
 figure(3)
 hold on;
 plot(xi,f(xi),'LineWidth',1.5); plot(xi,N1,'LineWidth',1.5); plot(xi,N2,'LineWidth',1.5); plot(xi,N3,'LineWidth',1.5);
-grid on; legend('Ô­º¯Êý','5½×²åÖµ','10½×²åÖµ','20½×²åÖµ');
+grid on; legend('original','order=5','order=10','order=20');
 xlabel('x');ylabel('y');
 title(['$x=\sqrt{t}-1, t \in [0, 4]$'],'interpreter','latex','FontSize',13);
 axis([-1,1,-0.2,1.2]);
-disp('x=sqrt(t)-1, t¡Ê[0, 4]');
-disp(['5½×£º ', polyFun1]);disp(['10½×£º ', polyFun2]);disp(['20½×£º ', polyFun3]);
 
-% 2¶ÔÓÚÖ¸Êýº¯Êý·Ö²¼£º
-f3 = @(t)exp(t)-2;           % f = exp(t)-2,t¡Ê[0,log(3)];
+% 3.exponential_distribution
+f3 = @(t)exp(t)-2;           % f = exp(t)-2,tâˆˆ[0,log(3)];
 t = linspace(0,log(3),100); xi = f3(t);
-x1 = f3(linspace(0,log(3),6));      %5½×
-x2 = f3(linspace(0,log(3),11));     %10½×
-x3 = f3(linspace(0,log(3),21));     %20½×
+x1 = f3(linspace(0,log(3),6));      % order = 5
+x2 = f3(linspace(0,log(3),11));     % order = 10
+x3 = f3(linspace(0,log(3),21));     % order = 20
 
 [polyFun1,N1] = NewtInt(x1,f(x1),xi);
 [polyFun2,N2] = NewtInt(x2,f(x2),xi);
@@ -100,19 +85,17 @@ x3 = f3(linspace(0,log(3),21));     %20½×
 figure(4)
 hold on;
 plot(xi,f(xi),'LineWidth',1.5); plot(xi,N1,'LineWidth',1.5); plot(xi,N2,'LineWidth',1.5); plot(xi,N3,'LineWidth',1.5);
-grid on; legend('Ô­º¯Êý','5½×²åÖµ','10½×²åÖµ','20½×²åÖµ');
+grid on; legend('original','order=5','order=10','order=20');
 xlabel('x');ylabel('y');
 title(['$x=\mathrm{e}^{t}-2, t \in [0, ln3]$'],'interpreter','latex','FontSize',13);
 axis([-1,1,-0.2,1.2]);
-disp('x=e^t-2, t¡Ê[0, ln3]');
-disp(['5½×£º ', polyFun1]);disp(['10½×£º ', polyFun2]);disp(['20½×£º ', polyFun3]);
 
-% 3¶ÔÓÚ¶ÔÊýº¯Êý·Ö²¼£º
-f4 = @(t)log(t);           % f = ln(t),t¡Ê[e^-1,e];
+% 4.logarithmic_distribution
+f4 = @(t)log(t);           % f = ln(t),tâˆˆ[e^-1,e];
 t = linspace(exp(1)^-1,exp(1),100); xi = f4(t);
-x1 = f4(linspace(exp(1)^-1,exp(1),6));      %5½×
-x2 = f4(linspace(exp(1)^-1,exp(1),11));     %10½×
-x3 = f4(linspace(exp(1)^-1,exp(1),21));     %20½×
+x1 = f4(linspace(exp(1)^-1,exp(1),6));      % order = 5
+x2 = f4(linspace(exp(1)^-1,exp(1),11));     % order = 10
+x3 = f4(linspace(exp(1)^-1,exp(1),21));     % order = 20
 
 [polyFun1,N1] = NewtInt(x1,f(x1),xi);
 [polyFun2,N2] = NewtInt(x2,f(x2),xi);
@@ -121,21 +104,20 @@ x3 = f4(linspace(exp(1)^-1,exp(1),21));     %20½×
 figure(5)
 hold on;
 plot(xi,f(xi),'LineWidth',1.5); plot(xi,N1,'LineWidth',1.5); plot(xi,N2,'LineWidth',1.5); plot(xi,N3,'LineWidth',1.5);
-grid on; legend('Ô­º¯Êý','5½×²åÖµ','10½×²åÖµ','20½×²åÖµ');
+grid on; legend('original','order=5','order=10','order=20');
 xlabel('x');ylabel('y');
 title(['$x=ln(t), t \in [\mathrm{e}^{-1}, \mathrm{e}]$'],'interpreter','latex','FontSize',13);
 axis([-1,1,-0.2,1.2]);
-disp('x=ln(t), t¡Ê[e-1, e]');
-disp(['5½×£º ', polyFun1]);disp(['10½×£º ', polyFun2]);disp(['20½×£º ', polyFun3]);
+disp('x=ln(t), tâˆˆ[e-1, e]');
+disp(['5é˜¶ï¼š ', polyFun1]);disp(['10é˜¶ï¼š ', polyFun2]);disp(['20é˜¶ï¼š ', polyFun3]);
 
 
-% 4¶ÔÓÚÈý½Çº¯Êý·Ö²¼£º
-% 4.1¶ÔÓÚÓàÏÒ
-f5 = @(t)-cos(t);           %f = -cos(t);t¡Ê[0,pi];
+% 5.cosine_distribution
+f5 = @(t)-cos(t);           %f = -cos(t);tâˆˆ[0,pi];
 t = linspace(0,pi,100); xi = f5(t);
-x1 = f5(linspace(0,pi,6));      %5½×
-x2 = f5(linspace(0,pi,11));     %10½×
-x3 = f5(linspace(0,pi,21));     %20½×
+x1 = f5(linspace(0,pi,6));      % order = 5
+x2 = f5(linspace(0,pi,11));     % order = 10
+x3 = f5(linspace(0,pi,21));     %  order = 20
 
 [polyFun1,N1] = NewtInt(x1,f(x1),xi);
 [polyFun2,N2] = NewtInt(x2,f(x2),xi);
@@ -144,19 +126,17 @@ x3 = f5(linspace(0,pi,21));     %20½×
 figure(6)
 hold on;
 plot(xi,f(xi),'LineWidth',1.5); plot(xi,N1,'LineWidth',1.5); plot(xi,N2,'LineWidth',1.5); plot(xi,N3,'LineWidth',1.5);
-grid on; legend('Ô­º¯Êý','5½×²åÖµ','10½×²åÖµ','20½×²åÖµ');
+grid on; legend('original','order=5','order=10','order=20');
 xlabel('x');ylabel('y');
 title(['$x=-cos(t), t \in [0, \pi]$'],'interpreter','latex','FontSize',13);
 axis([-1,1,-0.2,1.2]);
-disp('x=-cos(t), t¡Ê[0, ¦Ð]');
-disp(['5½×£º ', polyFun1]);disp(['10½×£º ', polyFun2]);disp(['20½×£º ', polyFun3]);
 
-% 4.2¶ÔÓÚÕýÏÒ:
-f6 = @(t)sin(t);           %f = sin(t);t¡Ê[-pi/2,pi/2];
+% 5.sine_distribution
+f6 = @(t)sin(t);           %f = sin(t);tâˆˆ[-pi/2,pi/2];
 t = linspace(-pi/2,pi/2,100); xi = f6(t);
-x1 = f6(linspace(-pi/2,pi/2,6));      %5½×
-x2 = f6(linspace(-pi/2,pi/2,11));     %10½×
-x3 = f6(linspace(-pi/2,pi/2,21));     %20½×
+x1 = f6(linspace(-pi/2,pi/2,6));      % order = 5
+x2 = f6(linspace(-pi/2,pi/2,11));     % order = 10
+x3 = f6(linspace(-pi/2,pi/2,21));     % order = 20
 
 [polyFun1,N1] = NewtInt(x1,f(x1),xi);
 [polyFun2,N2] = NewtInt(x2,f(x2),xi);
@@ -165,22 +145,18 @@ x3 = f6(linspace(-pi/2,pi/2,21));     %20½×
 figure(7)
 hold on;
 plot(xi,f(xi),'LineWidth',1.5); plot(xi,N1,'LineWidth',1.5); plot(xi,N2,'LineWidth',1.5); plot(xi,N3,'LineWidth',1.5);
-grid on; legend('Ô­º¯Êý','5½×²åÖµ','10½×²åÖµ','20½×²åÖµ');
+grid on; legend('original','order=5','order=10','order=20');
 xlabel('x');ylabel('y');
 title(['$x=sin(t), t \in [-\frac{\pi}{2}, \frac{\pi}{2}]$'],'interpreter','latex','FontSize',13);
 axis([-1,1,-0.2,1.2]);
-disp('x=sin(t), t¡Ê[-¦Ð/2, ¦Ð/2]');
-disp(['5½×£º ', polyFun1]);disp(['10½×£º ', polyFun2]);disp(['20½×£º ', polyFun3]);
 
-
-%% Ìâ3 ÕÒ³öÒ»ÖÖxi·Ö²¼Ê¹N(x)ÊÕÁ²µ½f(x)
-% ´ÓÉÏÍ¼²»Í¬µÄ³õµÈº¯Êý²åÖµ£¬¿ÉÒÔÖªµÀÈý½Çº¯ÊýÄÜÓÐÐ§µÄÊ¹¶àÏîÊ½ÊÕÁ²µ½Ô­º¯Êý£¬½×ÊýÔ½¸ß£¬ÊÕÁ²½á¹ûÔ½ºÃ
-% Êµ¼ÊÉÏxiÂú×ãÇÐ±ÈÑ©·ò½áµãÊ±ÄÜÊ¹N(x)ÓÐÐ§ÊÕÁ²ÓÚf(x),´ËÊ±ÓÐxk = cos((2k+1)*pi/(2(n+1))), k =n,n-1,,,0;
+% Actually when x satisfies the chebyshev polynomial, the interpolation function convergents
+% xk = cos((2k+1)*pi/(2(n+1))), k =n,n-1,,,0;
 f7 = @(k)cos(((2*k+1)*pi)./(2*length(k)));
 k = linspace(99,0,100); xi = f7(k);
-x1 = f7(linspace(5,0,6));      %5½×
-x2 = f7(linspace(10,0,11));     %10½×
-x3 = f7(linspace(20,0,21));     %20½×
+x1 = f7(linspace(5,0,6));      % order = 5
+x2 = f7(linspace(10,0,11));     %order = 10
+x3 = f7(linspace(20,0,21));     %order = 20
 
 [polyFun1,N1] = NewtInt(x1,f(x1),xi);
 [polyFun2,N2] = NewtInt(x2,f(x2),xi);
@@ -189,9 +165,7 @@ x3 = f7(linspace(20,0,21));     %20½×
 figure(8)
 hold on;
 plot(xi,f(xi),'LineWidth',1.5); plot(xi,N1,'LineWidth',1.5); plot(xi,N2,'LineWidth',1.5); plot(xi,N3,'LineWidth',1.5);
-grid on; legend('Ô­º¯Êý','5½×²åÖµ','10½×²åÖµ','20½×²åÖµ');
+grid on; legend('original','order=5','order=10','order=20');
 xlabel('x');ylabel('y');
 title(['$x_k=cos(\frac{(2k+1)\pi}{2(n+1)}), k=n,n-1,...,0$'],'interpreter','latex','FontSize',13);
 axis([-1,1,-0.2,1.2]);
-disp('xk = cos((2k+1)*pi/(2(n+1))), k =n,n-1,,,0');
-disp(['5½×£º ', polyFun1]);disp(['10½×£º ', polyFun2]);disp(['20½×£º ', polyFun3]);
